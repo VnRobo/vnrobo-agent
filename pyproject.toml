@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vnrobo-agent"
+version = "0.1.0"
+description = "Lightweight heartbeat agent for VnRobo Fleet Monitor"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.8"
+authors = [
+    { name = "VnRobo", email = "hello@vnrobo.com" },
+]
+keywords = ["robotics", "fleet", "monitoring", "heartbeat", "vnrobo"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+dependencies = [
+    "requests>=2.20",
+]
+
+[project.scripts]
+vnrobo-agent = "vnrobo_agent.cli:main"
+
+[project.urls]
+Homepage = "https://vnrobo.com"
+Repository = "https://github.com/nguyenanhtuan1008/ptfl-vnrobo"
+Documentation = "https://app.vnrobo.com/docs/agent"
