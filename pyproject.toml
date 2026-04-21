@@ -34,5 +34,5 @@ vnrobo-agent = "vnrobo_agent.cli:main"
 
 [project.urls]
 Homepage = "https://vnrobo.com"
-Repository = "https://github.com/nguyenanhtuan1008/ptfl-vnrobo"
-Documentation = "https://app.vnrobo.com/docs/agent"
+Repository = "https://github.com/VnRobo/vnrobo-agent"
+Documentation = "https://vnrobo.com/docs"

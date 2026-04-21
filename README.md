@@ -1,6 +1,18 @@
 # vnrobo-agent
 
-Lightweight Python agent that sends heartbeat data from your robot to [VnRobo Fleet Monitor](https://app.vnrobo.com).
+[![PyPI version](https://badge.fury.io/py/vnrobo-agent.svg)](https://pypi.org/project/vnrobo-agent/)
+[![Python](https://img.shields.io/pypi/pyversions/vnrobo-agent.svg)](https://pypi.org/project/vnrobo-agent/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Tests](https://github.com/VnRobo/vnrobo-agent/actions/workflows/test.yml/badge.svg)](https://github.com/VnRobo/vnrobo-agent/actions)
+
+Lightweight Python agent that sends robot telemetry to **[VnRobo Fleet Monitor](https://app.vnrobo.com)** — the open fleet monitoring dashboard for robotics teams.
+
+```python
+from vnrobo_agent import VnRoboAgent
+
+agent = VnRoboAgent(api_key="your-key", robot_id="robot-01")
+agent.start()  # sends heartbeat every 60s in background
+```
 
 ## Install
 
@@ -8,105 +20,104 @@ Lightweight Python agent that sends heartbeat data from your robot to [VnRobo Fl
 pip install vnrobo-agent
 ```
 
+Requires Python 3.8+. No dependencies beyond `requests`.
+
 ## Quick Start
 
 ```python
 from vnrobo_agent import VnRoboAgent
 
-agent = VnRoboAgent(api_key="your-key", robot_id="robot-01")
-agent.start()  # sends heartbeats every 60s in background
-```
+agent = VnRoboAgent(
+    api_key="your-key",   # or set VNROBO_API_KEY env var
+    robot_id="robot-01",  # or set VNROBO_ROBOT_ID env var
+    interval=30,          # heartbeat every 30s (default: 60)
+)
+agent.start()
 
-When shutting down:
+# ... your robot code runs here ...
 
-```python
 agent.stop()
 ```
 
-## Send Custom Data
+Get your free API key at **[app.vnrobo.com](https://app.vnrobo.com)** — free for up to 3 robots.
+
+## Send Rich Telemetry
 
 ```python
 agent.send_heartbeat(
-    status="busy",
-    battery=72.5,
-    location={"lat": 21.0285, "lng": 105.8542},
+    status="busy",                               # online | idle | busy | error | offline
+    battery=72.5,                                # battery % 0-100
+    location={"lat": 21.0285, "lng": 105.8542}, # GPS or indoor coords
     metadata={"task": "picking", "payload_kg": 3.2},
+)
+```
+
+## ROS 2 Integration
+
+```bash
+# Zero-config ROS 2 monitoring (no code required):
+# See github.com/VnRobo/ros2-fleet-bridge
+
+# Or use the included example node:
+ros2 run your_package vnrobo_heartbeat \
+    --ros-args -p api_key:=YOUR_KEY -p robot_id:=my_robot
+```
+
+Full example: [`examples/ros2_heartbeat.py`](examples/ros2_heartbeat.py)
+
+## Isaac Lab / RL Training
+
+Track training robots in real-time on the dashboard:
+
+```python
+agent = VnRoboAgent(api_key=os.environ["VNROBO_KEY"], robot_id="go2-train-01")
+
+# In your training loop:
+agent.send_heartbeat(
+    status="training",
+    metadata={"episode": ep, "reward": float(mean_reward), "step": total_steps},
 )
 ```
 
 ## CLI
 
 ```bash
-# Test connectivity with a single ping
-vnrobo-agent ping --api-key=YOUR_KEY --robot-id=robot-01
+# Test connectivity
+vnrobo-agent ping --api-key YOUR_KEY --robot-id robot-01
 
-# Run continuous heartbeats
-vnrobo-agent start --api-key=YOUR_KEY --robot-id=robot-01 --interval=30
-```
+# Run as daemon
+vnrobo-agent start --api-key YOUR_KEY --robot-id robot-01 --interval 30
 
-## Environment Variables
-
-Instead of passing flags every time:
-
-```bash
+# Or via environment variables
 export VNROBO_API_KEY=your-key
 export VNROBO_ROBOT_ID=robot-01
-
 vnrobo-agent start
 ```
 
-## ROS2 Integration
+## Compatibility
 
-```python
-import rclpy
-from rclpy.node import Node
-from sensor_msgs.msg import BatteryState
-from vnrobo_agent import VnRoboAgent
+| Platform | Support |
+|---|---|
+| ROS 2 (Humble / Iron / Jazzy) | ✅ |
+| Isaac Lab / Isaac Sim | ✅ |
+| Unitree SDK (Go2, G1, H1) | ✅ |
+| MuJoCo / Gymnasium | ✅ |
+| Bare Python / embedded | ✅ |
 
+## Contributing
 
-class HeartbeatNode(Node):
-    def __init__(self):
-        super().__init__("vnrobo_heartbeat")
-        self.agent = VnRoboAgent(api_key="your-key", robot_id="robot-01", interval=30)
-        self.agent.start()
-        self.create_subscription(BatteryState, "/battery", self.on_battery, 10)
-        self.battery_pct = None
-
-    def on_battery(self, msg):
-        self.battery_pct = msg.percentage * 100
-        self.agent.send_heartbeat(status="online", battery=self.battery_pct)
-
-    def destroy_node(self):
-        self.agent.stop()
-        super().destroy_node()
-
-
-def main():
-    rclpy.init()
-    node = HeartbeatNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+```bash
+git clone https://github.com/VnRobo/vnrobo-agent
+cd vnrobo-agent
+pip install -e .
 ```
 
-## API
-
-### `VnRoboAgent(api_key, robot_id, endpoint, interval)`
-
-| Param | Default | Description |
-|-------|---------|-------------|
-| `api_key` | `VNROBO_API_KEY` env | Your API key from app.vnrobo.com |
-| `robot_id` | `VNROBO_ROBOT_ID` env | Unique identifier for this robot |
-| `endpoint` | `https://app.vnrobo.com/api/heartbeat` | API endpoint |
-| `interval` | `60` | Seconds between heartbeats |
-
-### Methods
-
-- **`start()`** — Start background heartbeat thread
-- **`stop()`** — Stop heartbeat thread
-- **`send_heartbeat(status, battery, location, metadata)`** — Send one heartbeat manually
-- **`is_running`** — Property, True if heartbeat thread is active
+Issues and PRs welcome.
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
+
+---
+
+**Monitor your robots for free → [app.vnrobo.com](https://app.vnrobo.com)**
