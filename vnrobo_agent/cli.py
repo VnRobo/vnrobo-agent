@@ -72,7 +72,9 @@ def main() -> None:
             interval=args.interval,
         )
 
-        stop = lambda *_: (agent.stop(), sys.exit(0))
+        def stop(*_):
+            agent.stop()
+            sys.exit(0)
         signal.signal(signal.SIGINT, stop)
         signal.signal(signal.SIGTERM, stop)
 
